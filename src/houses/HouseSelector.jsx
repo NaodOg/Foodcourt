@@ -12,6 +12,8 @@ function GrainOverlay() {
   );
 }
 
+const FOOD_PATTERN = `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='60' cy='60' r='28' fill='none' stroke='%23b7102a' stroke-width='0.5' opacity='0.12' /%3E%3Ccircle cx='30' cy='30' r='6' fill='%23b7102a' opacity='0.06' /%3E%3Ccircle cx='90' cy='30' r='4' fill='%23b7102a' opacity='0.05' /%3E%3Ccircle cx='30' cy='90' r='5' fill='%23b7102a' opacity='0.05' /%3E%3Ccircle cx='90' cy='90' r='3' fill='%23b7102a' opacity='0.04' /%3E%3Ccircle cx='60' cy='15' r='2' fill='%23b7102a' opacity='0.04' /%3E%3Ccircle cx='60' cy='105' r='2' fill='%23b7102a' opacity='0.04' /%3E%3Ccircle cx='15' cy='60' r='2' fill='%23b7102a' opacity='0.04' /%3E%3Ccircle cx='105' cy='60' r='2' fill='%23b7102a' opacity='0.04' /%3E%3Cpath d='M45 45 Q60 40 75 45' fill='none' stroke='%23b7102a' stroke-width='0.4' opacity='0.07' /%3E%3Cpath d='M45 75 Q60 80 75 75' fill='none' stroke='%23b7102a' stroke-width='0.4' opacity='0.07' /%3E%3C/svg%3E")`;
+
 function Header() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -190,7 +192,7 @@ export default function HouseSelector() {
 
   return (
     <div className="min-h-[100dvh] relative" style={{ backgroundColor: '#faf3ea' }}>
-      <div className="dark:bg-zinc-950 min-h-[100dvh] transition-colors duration-500 relative">
+      <div className="dark:bg-zinc-950 min-h-[100dvh] transition-colors duration-500 relative" style={{ backgroundImage: FOOD_PATTERN, backgroundSize: '120px 120px' }}>
         <GrainOverlay />
         <Header />
 
