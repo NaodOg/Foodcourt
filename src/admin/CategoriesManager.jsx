@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useParams } from 'react-router-dom';
@@ -10,6 +10,10 @@ const defaultForm = {
   title: '',
   image: '',
 };
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
 
 export default function CategoriesManager() {
   const { houseSlug } = useParams();
@@ -31,11 +35,13 @@ export default function CategoriesManager() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [validationError, setValidationError] = useState('');
+  const slugManuallyEdited = useRef(false);
 
   const openAdd = () => {
     setIsEditing(false);
     setEditingId(null);
     setForm({ ...defaultForm, tab: TABS[0] || '' });
+    slugManuallyEdited.current = false;
     setShowModal(true);
   };
 
@@ -240,7 +246,14 @@ export default function CategoriesManager() {
                 <input
                   type="text"
                   value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
+                  onChange={e => {
+                    const title = e.target.value;
+                    setForm(prev => ({
+                      ...prev,
+                      title,
+                      id: !isEditing && !slugManuallyEdited.current ? slugify(title) : prev.id,
+                    }));
+                  }}
                   placeholder="e.g. Sushi & Rolls"
                   className="w-full p-4 border border-surface-variant rounded-xl bg-white focus:outline-none focus:border-brand-red transition-all"
                   required
@@ -252,13 +265,16 @@ export default function CategoriesManager() {
                 <input
                   type="text"
                   value={form.id}
-                  onChange={e => setForm({ ...form, id: e.target.value })}
+                  onChange={e => {
+                    slugManuallyEdited.current = true;
+                    setForm({ ...form, id: e.target.value });
+                  }}
                   placeholder="e.g. sushi-rolls"
                   className="w-full p-4 border border-surface-variant rounded-xl bg-white focus:outline-none focus:border-brand-red transition-all"
                   required
                   disabled={isEditing}
                 />
-                <p className="text-xs text-secondary mt-1">Unique identifier used in URLs. Cannot be changed after creation.</p>
+                <p className="text-xs text-secondary mt-1">Auto-generated from title. You can type to override.</p>
               </div>
 
               <div>
