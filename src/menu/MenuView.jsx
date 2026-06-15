@@ -1,13 +1,21 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { QRCodeSVG } from 'qrcode.react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useCart } from '../cart/CartContext.jsx';
 
 function Header({ house, isDarkMode, toggleDarkMode }) {
   return (
     <header className="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-creamy dark:bg-zinc-950 border-b-2 border-surface-variant dark:border-zinc-800">
       <div className="flex items-center gap-3">
+        <Link
+          to="/"
+          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors active:scale-90 shrink-0"
+          aria-label="Back to food court"
+        >
+          <span className="material-symbols-outlined text-brand-red dark:text-red-500 text-xl">arrow_back</span>
+        </Link>
         {house && (
           <img src={house.logo} alt={house.name} className="h-10 w-10 rounded-xl object-cover shadow-sm border border-outline/20" />
         )}
@@ -82,9 +90,9 @@ function MenuItem({ item, onAddToCart }) {
   return (
     <div className="group flex items-center justify-between p-sm border-b border-surface-variant dark:border-zinc-800 transition-colors hover:bg-white/50 dark:hover:bg-zinc-900/50 duration-300">
       <div className="flex-1 pr-md">
-        <h3 className="font-headline-md text-headline-md uppercase mb-xs group-hover:text-brand-red transition-colors dark:text-zinc-100">
-          {item.title}
-        </h3>
+<h3 className="font-headline-md text-headline-md uppercase mb-xs group-hover:text-brand-red transition-colors dark:text-zinc-100 whitespace-pre-line">
+  {item.title}
+</h3>
         <p className="font-body-md text-body-md text-secondary dark:text-zinc-400 mb-xs">
           {item.description}
         </p>
@@ -162,12 +170,9 @@ export default function MenuView() {
     return false;
   });
 
+  const { cart, isCartOpen, setIsCartOpen, isOrderPlaced, orderPlacedQR, addToCart, updateQuantity, resetOrder, placeOrder, totalItems } = useCart();
   const [activeTab, setActiveTab] = useState('All');
   const [activeSubCategory, setActiveSubCategory] = useState(null);
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
-  const [orderPlacedQR, setOrderPlacedQR] = useState(null);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -191,7 +196,9 @@ export default function MenuView() {
   };
 
   // Reset navigation when house changes
-  if (activeSubCategory !== null && houseSlug) {
+  const prevHouseSlug = useRef(houseSlug);
+  if (houseSlug !== prevHouseSlug.current) {
+    prevHouseSlug.current = houseSlug;
     setActiveSubCategory(null);
   }
 
@@ -215,29 +222,6 @@ export default function MenuView() {
     setActiveSubCategory(null);
   };
 
-  const addToCart = (item) => {
-    setCart(prev => {
-      const existing = prev.find(i => i._id === item._id);
-      if (existing) {
-        return prev.map(i => i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i);
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-  };
-
-  const updateQuantity = (id, delta) => {
-    setCart(prev => {
-      return prev.map(i => {
-        if (i._id === id) {
-          const newQ = i.quantity + delta;
-          return newQ > 0 ? { ...i, quantity: newQ } : null;
-        }
-        return i;
-      }).filter(Boolean);
-    });
-  };
-
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + (item.numericPrice * item.quantity), 0);
   const tax = subtotal * (taxRate / 100);
   const total = subtotal + tax;
@@ -245,16 +229,8 @@ export default function MenuView() {
   const handlePlaceOrder = () => {
     if (cart.length === 0) return;
     const orderLines = cart.map(c => `${c.quantity}x ${c.title}`).join('\n');
-    const qrData = `HOUSE: ${houseSlug}\nORDER:\n${orderLines}\n\nSubtotal: ${subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
-    setOrderPlacedQR(qrData);
-    setIsOrderPlaced(true);
-  };
-
-  const resetOrder = () => {
-    setCart([]);
-    setOrderPlacedQR(null);
-    setIsOrderPlaced(false);
-    setIsCartOpen(false);
+    const qrData = `ORDER:\n${orderLines}\n\nSubtotal: ${subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
+    placeOrder(qrData);
   };
 
   if (!houseSlug) {

@@ -12,6 +12,7 @@ import SettingsManager from './admin/SettingsManager.jsx'
 import WaiterScanner from './waiter/WaiterScanner.jsx'
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CartProvider } from './cart/CartContext.jsx';
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL || "https://placeholder-url.convex.cloud";
 const convex = new ConvexReactClient(convexUrl);
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ConvexProvider client={convex}>
       <BrowserRouter>
+        <CartProvider>
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/menu/:houseSlug" element={<MenuView />} />
@@ -35,6 +37,7 @@ createRoot(document.getElementById('root')).render(
             <Route path=":houseSlug/settings" element={<SettingsManager />} />
           </Route>
         </Routes>
+      </CartProvider>
       </BrowserRouter>
     </ConvexProvider>
   </StrictMode>,

@@ -67,25 +67,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {stats.map(s => (
-          <div
-            key={s.label}
-            onClick={s.action}
-            className="bg-white rounded-2xl border border-surface-variant p-6 hover:shadow-md transition-shadow cursor-pointer"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl ${s.color} flex items-center justify-center`}>
-                <span className="material-symbols-outlined text-[24px]">{s.icon}</span>
-              </div>
-            </div>
-            <p className="text-3xl font-headline-md text-on-background">{s.value}</p>
-            <p className="text-secondary text-sm font-label-bold mt-1">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Quick Actions */}
       <div>
         <h2 className="font-headline-md text-lg text-on-background mb-4">Quick Actions</h2>
@@ -105,6 +86,25 @@ export default function Dashboard() {
             Add Category
           </button>
         </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {stats.map(s => (
+          <div
+            key={s.label}
+            onClick={s.action}
+            className="bg-white rounded-2xl border border-surface-variant p-6 hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl ${s.color} flex items-center justify-center`}>
+                <span className="material-symbols-outlined text-[24px]">{s.icon}</span>
+              </div>
+            </div>
+            <p className="text-3xl font-headline-md text-on-background">{s.value}</p>
+            <p className="text-secondary text-sm font-label-bold mt-1">{s.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Recent Categories */}

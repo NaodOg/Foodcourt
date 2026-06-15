@@ -164,42 +164,42 @@ export default function CategoriesManager() {
             : 'No categories match the selected tab.'}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {filteredCategories.map(cat => (
             <div
               key={cat._id}
-              className="bg-white rounded-2xl border border-surface-variant overflow-hidden hover:shadow-md transition-shadow group"
+              className="bg-white rounded-xl border border-surface-variant overflow-hidden hover:shadow-md transition-shadow group"
             >
-              <div className="relative h-36 overflow-hidden">
+              <div className="relative h-20 overflow-hidden">
                 <img
                   src={cat.image}
                   alt={cat.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3">
-                  <h3 className="font-headline-md text-sm uppercase text-white drop-shadow-md">{cat.title}</h3>
+                <div className="absolute bottom-1.5 left-2 right-2">
+                  <h3 className="font-headline-md text-[11px] uppercase text-white drop-shadow-md truncate">{cat.title}</h3>
                 </div>
-                <span className="absolute top-3 right-3 text-[10px] font-label-bold text-white bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
+                <span className="absolute top-1.5 right-1.5 text-[9px] font-label-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
                   {cat.tab}
                 </span>
               </div>
-              <div className="p-3 flex items-center justify-between">
-                <span className="text-xs text-secondary font-label-bold">Slug: {cat.id}</span>
-                <div className="flex gap-1.5">
+              <div className="p-2 flex items-center justify-between">
+                <span className="text-[10px] text-secondary font-label-bold truncate max-w-[80px]">{cat.id}</span>
+                <div className="flex gap-1 shrink-0">
                   <button
                     onClick={() => openEdit(cat)}
-                    className="w-8 h-8 rounded-lg bg-surface-variant text-secondary hover:text-on-background hover:bg-surface-dim flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg bg-surface-variant text-secondary hover:text-on-background hover:bg-surface-dim flex items-center justify-center transition-colors"
                     title="Edit"
                   >
-                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
                   </button>
                   <button
                     onClick={() => setDeleteTarget(cat._id)}
-                    className="w-8 h-8 rounded-lg bg-error-container text-error hover:bg-red-200 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg bg-error-container text-error hover:bg-red-200 flex items-center justify-center transition-colors"
                     title="Delete"
                   >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
                   </button>
                 </div>
               </div>
