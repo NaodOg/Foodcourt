@@ -293,7 +293,7 @@ export default function WaiterScanner() {
     <div className="min-h-[100dvh] bg-creamy flex flex-col">
       <div className="flex-1 flex flex-col items-center px-4 sm:px-8 py-8">
         <div className="w-full max-w-2xl flex flex-col items-center text-center">
-          <img src="/logos/flint-court.jpg" alt="Flint Food Court" className="w-28 h-28 rounded-2xl object-cover mb-6 shadow-md" />
+          <img src="/logos/flint-court.jpg" alt="Flint Food Court" className="w-40 h-40 object-contain mb-6" />
 
           <h1 className="font-headline-md text-4xl sm:text-5xl lg:text-6xl text-on-background mb-3">Waiter Scanner</h1>
           <p className="text-secondary text-lg sm:text-xl font-body-md mb-10">
