@@ -282,8 +282,8 @@ export default function WaiterScanner() {
         </div>
 
         <div className="px-6 py-4 flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-white/40 text-[18px]">restaurant_menu</span>
-          <span className="font-headline-md text-sm text-white/40 tracking-wide uppercase">mmm menu · Waiter</span>
+          <img src="/logos/flint-court.jpg" alt="" className="w-5 h-5 rounded object-cover opacity-40" />
+          <span className="font-headline-md text-sm text-white/40 tracking-wide uppercase">Flint Food Court · Waiter</span>
         </div>
       </div>
     );
@@ -293,9 +293,7 @@ export default function WaiterScanner() {
     <div className="min-h-[100dvh] bg-creamy flex flex-col">
       <div className="flex-1 flex flex-col items-center px-4 sm:px-8 py-8">
         <div className="w-full max-w-2xl flex flex-col items-center text-center">
-          <div className="w-32 h-32 rounded-[32px] bg-brand-red/10 flex items-center justify-center mb-8">
-            <span className="material-symbols-outlined text-brand-red text-7xl">qr_code_scanner</span>
-          </div>
+          <img src="/logos/flint-court.jpg" alt="Flint Food Court" className="w-28 h-28 rounded-2xl object-cover mb-6 shadow-md" />
 
           <h1 className="font-headline-md text-4xl sm:text-5xl lg:text-6xl text-on-background mb-3">Waiter Scanner</h1>
           <p className="text-secondary text-lg sm:text-xl font-body-md mb-10">
@@ -472,8 +470,8 @@ export default function WaiterScanner() {
       </div>
 
       <div className="px-6 py-4 flex items-center justify-center gap-2 border-t border-surface-variant">
-        <span className="material-symbols-outlined text-secondary text-[18px]">restaurant_menu</span>
-        <span className="font-headline-md text-sm text-secondary tracking-wide uppercase">mmm menu · Flint Food Court</span>
+        <img src="/logos/flint-court.jpg" alt="" className="w-5 h-5 rounded object-cover" />
+        <span className="font-headline-md text-sm text-secondary tracking-wide uppercase">Flint Food Court</span>
       </div>
     </div>
   );
