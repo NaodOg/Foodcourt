@@ -5,40 +5,46 @@ import { api } from '../../convex/_generated/api';
 import { useParams } from 'react-router-dom';
 
 function parseOrderQR(text) {
-  const lines = text.split('\n').filter(Boolean);
+  const sections = text.split('---').map(s => s.trim()).filter(Boolean);
+  if (sections.length === 0) return null;
 
-  let houseSlug = null;
-  let startIndex = 0;
+  const orders = sections.map(section => {
+    const lines = section.split('\n').filter(Boolean);
 
-  if (lines[0]?.trim().startsWith('HOUSE:')) {
-    houseSlug = lines[0].replace('HOUSE:', '').trim();
-    startIndex = 1;
-  }
+    let houseSlug = null;
+    let startIndex = 0;
 
-  if (!lines[startIndex]?.trim().startsWith('ORDER:')) return null;
-
-  const items = [];
-  let i = startIndex + 1;
-  for (; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line || line.startsWith('Subtotal')) break;
-    const match = line.match(/^(\d+)x\s+(.+)/);
-    if (match) {
-      items.push({ quantity: parseInt(match[1]), name: match[2] });
-    } else if (!line.startsWith('Tax') && !line.startsWith('Total') && line.length > 0) {
-      items.push({ quantity: 1, name: line });
+    if (lines[0]?.trim().startsWith('HOUSE:')) {
+      houseSlug = lines[0].replace('HOUSE:', '').trim();
+      startIndex = 1;
     }
-  }
 
-  const summary = { subtotal: '', tax: '', total: '' };
-  for (; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.startsWith('Subtotal')) summary.subtotal = line.replace('Subtotal: ', '');
-    if (line.startsWith('Tax')) summary.tax = line.replace(/Tax \(.*?\): /, '');
-    if (line.startsWith('Total')) summary.total = line.replace('Total: ', '');
-  }
+    const items = [];
+    let i = startIndex;
+    for (; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line || line.startsWith('Subtotal')) break;
+      const match = line.match(/^(\d+)x\s+(.+)/);
+      if (match) {
+        items.push({ quantity: parseInt(match[1]), name: match[2] });
+      } else if (!line.startsWith('Tax') && !line.startsWith('Total') && line.length > 0) {
+        items.push({ quantity: 1, name: line });
+      }
+    }
 
-  return { items, ...summary, houseSlug };
+    const summary = { subtotal: '', tax: '', total: '' };
+    for (; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('Subtotal')) summary.subtotal = line.replace('Subtotal: ', '');
+      if (line.startsWith('Tax')) summary.tax = line.replace(/Tax \(.*?\): /, '');
+      if (line.startsWith('Total')) summary.total = line.replace('Total: ', '');
+    }
+
+    return { items, ...summary, houseSlug };
+  }).filter(o => o.items.length > 0);
+
+  if (orders.length === 0) return null;
+  return orders.length === 1 ? orders[0] : orders;
 }
 
 export default function WaiterScanner() {
@@ -91,23 +97,28 @@ export default function WaiterScanner() {
           },
           async (decodedText) => {
             const parsed = parseOrderQR(decodedText);
-            if (parsed && parsed.items.length > 0) {
+            const orders = Array.isArray(parsed) ? parsed : [parsed];
+            const validOrders = orders.filter(o => o && o.items?.length > 0);
+            if (validOrders.length > 0) {
               try { await scannerRef.current?.stop(); } catch { /* scanner stopped */ }
               scannerRef.current = null;
 
-              // Look up the house from the QR data
-              const matchedHouse = allHouses?.find(h => h.slug === parsed.houseSlug);
-              setScannedHouse(matchedHouse || null);
-
-              setOrderData(parsed);
+              setOrderData(validOrders.length === 1 ? validOrders[0] : validOrders);
               setScanTime(new Date().toLocaleTimeString());
               setMode('scanned');
 
-              // Save order with houseId if available
-              if (matchedHouse) {
-                const { houseSlug, ...cleanOrderData } = parsed;
-                saveOrder({ houseId: matchedHouse._id, orderData: cleanOrderData });
-              }
+              // Save one order per house
+              validOrders.forEach(o => {
+                const matchedHouse = allHouses?.find(h => h.slug === o.houseSlug);
+                if (matchedHouse) {
+                  const { houseSlug, ...cleanOrderData } = o;
+                  saveOrder({ houseId: matchedHouse._id, orderData: cleanOrderData });
+                }
+              });
+
+              // Set first house for display
+              const firstHouse = allHouses?.find(h => h.slug === validOrders[0].houseSlug);
+              setScannedHouse(firstHouse || null);
             } else {
               navigator.vibrate?.(100);
               setError('Invalid order QR code');
@@ -186,44 +197,89 @@ export default function WaiterScanner() {
               <p className="text-secondary font-body-md">Scanned at {scanTime}</p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-surface-variant overflow-hidden">
-              <div className="px-5 sm:px-7 py-4 bg-surface-container-low border-b border-surface-variant flex items-center justify-between">
-                <span className="font-label-bold text-sm text-secondary uppercase tracking-wide">Items</span>
-                <span className="text-xs text-secondary">{orderData.items.length} item{orderData.items.length !== 1 ? 's' : ''}</span>
+            {Array.isArray(orderData) ? (
+              <div className="w-full space-y-4">
+                {orderData.map((order, oi) => {
+                  const h = allHouses?.find(hh => hh.slug === order.houseSlug);
+                  return (
+                    <div key={oi} className="bg-white rounded-2xl shadow-lg border border-surface-variant overflow-hidden">
+                      <div className="px-5 sm:px-7 py-3 bg-surface-container-low border-b border-surface-variant flex items-center gap-2">
+                        {h && <img src={h.logo} alt={h.name} className="w-5 h-5 rounded object-cover" />}
+                        <span className="font-label-bold text-sm text-secondary uppercase tracking-wide">{h?.name || 'Order'}</span>
+                        <span className="ml-auto text-xs text-secondary">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      <ul className="divide-y divide-surface-variant">
+                        {order.items.map((item, idx) => (
+                          <li key={idx} className="flex items-center gap-4 px-5 sm:px-7 py-4">
+                            <span className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red font-label-bold flex items-center justify-center shrink-0">
+                              {item.quantity}x
+                            </span>
+                            <span className="font-body-md text-on-background text-lg">{item.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="border-t border-surface-variant px-5 sm:px-7 py-5 space-y-2">
+                        {order.subtotal && (
+                          <div className="flex justify-between text-secondary">
+                            <span>Subtotal</span>
+                            <span>{order.subtotal}</span>
+                          </div>
+                        )}
+                        {order.tax && (
+                          <div className="flex justify-between text-secondary">
+                            <span>Tax</span>
+                            <span>{order.tax}</span>
+                          </div>
+                        )}
+                        {order.total && (
+                          <div className="flex justify-between text-lg font-label-bold text-on-background pt-3 border-t border-surface-variant">
+                            <span>Total</span>
+                            <span className="text-brand-red">{order.total}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <ul className="divide-y divide-surface-variant">
-                {orderData.items.map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-4 px-5 sm:px-7 py-4">
-                    <span className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red font-label-bold flex items-center justify-center shrink-0">
-                      {item.quantity}x
-                    </span>
-                    <span className="font-body-md text-on-background text-lg">{item.name}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="border-t border-surface-variant px-5 sm:px-7 py-5 space-y-2">
-                {orderData.subtotal && (
-                  <div className="flex justify-between text-secondary">
-                    <span>Subtotal</span>
-                    <span>{orderData.subtotal}</span>
-                  </div>
-                )}
-                {orderData.tax && (
-                  <div className="flex justify-between text-secondary">
-                    <span>Tax</span>
-                    <span>{orderData.tax}</span>
-                  </div>
-                )}
-                {orderData.total && (
-                  <div className="flex justify-between text-lg font-label-bold text-on-background pt-3 border-t border-surface-variant">
-                    <span>Total</span>
-                    <span className="text-brand-red">{orderData.total}</span>
-                  </div>
-                )}
+            ) : (
+              <div className="bg-white rounded-2xl shadow-lg border border-surface-variant overflow-hidden">
+                <div className="px-5 sm:px-7 py-4 bg-surface-container-low border-b border-surface-variant flex items-center justify-between">
+                  <span className="font-label-bold text-sm text-secondary uppercase tracking-wide">Items</span>
+                  <span className="text-xs text-secondary">{orderData.items.length} item{orderData.items.length !== 1 ? 's' : ''}</span>
+                </div>
+                <ul className="divide-y divide-surface-variant">
+                  {orderData.items.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-4 px-5 sm:px-7 py-4">
+                      <span className="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red font-label-bold flex items-center justify-center shrink-0">
+                        {item.quantity}x
+                      </span>
+                      <span className="font-body-md text-on-background text-lg">{item.name}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-t border-surface-variant px-5 sm:px-7 py-5 space-y-2">
+                  {orderData.subtotal && (
+                    <div className="flex justify-between text-secondary">
+                      <span>Subtotal</span>
+                      <span>{orderData.subtotal}</span>
+                    </div>
+                  )}
+                  {orderData.tax && (
+                    <div className="flex justify-between text-secondary">
+                      <span>Tax</span>
+                      <span>{orderData.tax}</span>
+                    </div>
+                  )}
+                  {orderData.total && (
+                    <div className="flex justify-between text-lg font-label-bold text-on-background pt-3 border-t border-surface-variant">
+                      <span>Total</span>
+                      <span className="text-brand-red">{orderData.total}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex gap-4 mt-10">
               <button

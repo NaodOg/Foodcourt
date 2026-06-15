@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { QRCodeSVG } from 'qrcode.react';
@@ -159,6 +159,7 @@ export default function MenuView() {
   const house = useQuery(api.houses.getHouse, { slug: houseSlug });
   const houseId = house?._id;
   const settings = useQuery(api.settings.getSettings, { houseId: house?._id });
+  const allHouses = useQuery(api.houses.getAllHouses);
 
   const tabs = useMemo(() => settings?.tabs ?? ['Starters', 'Main', 'Drinks'], [settings?.tabs]);
   const taxRate = settings?.taxRate ?? 15;
@@ -171,6 +172,17 @@ export default function MenuView() {
   });
 
   const { cart, isCartOpen, setIsCartOpen, isOrderPlaced, orderPlacedQR, addToCart, updateQuantity, resetOrder, placeOrder, totalItems } = useCart();
+  const getHouse = useCallback((id) => allHouses?.find(h => h._id === id), [allHouses]);
+  const cartGroups = useMemo(() => {
+    const groups = {};
+    cart.forEach(item => {
+      const key = item.houseId;
+      if (!groups[key]) groups[key] = { houseId: key, items: [], subtotal: 0 };
+      groups[key].items.push(item);
+      groups[key].subtotal += item.numericPrice * item.quantity;
+    });
+    return Object.values(groups);
+  }, [cart]);
   const [activeTab, setActiveTab] = useState('All');
   const [activeSubCategory, setActiveSubCategory] = useState(null);
 
@@ -228,9 +240,15 @@ export default function MenuView() {
 
   const handlePlaceOrder = () => {
     if (cart.length === 0) return;
-    const orderLines = cart.map(c => `${c.quantity}x ${c.title}`).join('\n');
-    const qrData = `HOUSE: ${houseSlug}\nORDER:\n${orderLines}\n\nSubtotal: ${subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
-    placeOrder(qrData);
+    const sections = cartGroups.map(group => {
+      const h = getHouse(group.houseId);
+      const slug = h?.slug || 'unknown';
+      const tax = group.subtotal * (taxRate / 100);
+      const total = group.subtotal + tax;
+      const lines = group.items.map(c => `${c.quantity}x ${c.title}`).join('\n');
+      return `HOUSE: ${slug}\n${lines}\nSubtotal: ${group.subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
+    });
+    placeOrder(sections.join('\n---\n'));
   };
 
   if (!houseSlug) {
@@ -340,18 +358,28 @@ export default function MenuView() {
                   </p>
 
                   <div className="w-full bg-white dark:bg-zinc-900 rounded-xl border border-surface-variant dark:border-zinc-800 shadow-sm overflow-hidden transition-colors duration-300">
-                    <div className="bg-surface-container-low dark:bg-zinc-800 px-4 py-3 border-b border-surface-variant dark:border-zinc-800 font-headline-md text-sm uppercase text-secondary dark:text-zinc-400 transition-colors duration-300">Items</div>
-                    <ul className="divide-y divide-surface-variant dark:divide-zinc-800">
-                      {cart.map((item) => (
-                        <li key={item._id} className="p-3 flex justify-between items-center text-sm">
-                          <div className="flex items-center gap-3 text-on-background dark:text-zinc-100">
-                            <span className="font-label-bold text-brand-red bg-red-50 dark:bg-red-950/30 px-2 py-1 rounded-md">{item.quantity}x</span>
-                            <span className="font-headline-md uppercase">{item.title}</span>
+                    {cartGroups.map(group => {
+                      const h = getHouse(group.houseId);
+                      return (
+                        <div key={group.houseId}>
+                          <div className="bg-surface-container-low dark:bg-zinc-800 px-4 py-2 border-b border-surface-variant dark:border-zinc-800 flex items-center gap-2">
+                            {h && <img src={h.logo} alt={h.name} className="w-4 h-4 rounded object-cover" />}
+                            <span className="font-label-bold text-[11px] uppercase text-secondary dark:text-zinc-400">{h?.name || 'Unknown'}</span>
                           </div>
-                          <span className="text-secondary dark:text-zinc-400 font-label-bold shrink-0">{(item.numericPrice * item.quantity).toFixed(0)} ETB</span>
-                        </li>
-                      ))}
-                    </ul>
+                          <ul className="divide-y divide-surface-variant dark:divide-zinc-800">
+                            {group.items.map((item) => (
+                              <li key={item._id} className="p-3 flex justify-between items-center text-sm">
+                                <div className="flex items-center gap-3 text-on-background dark:text-zinc-100">
+                                  <span className="font-label-bold text-brand-red bg-red-50 dark:bg-red-950/30 px-2 py-1 rounded-md">{item.quantity}x</span>
+                                  <span className="font-headline-md uppercase">{item.title}</span>
+                                </div>
+                                <span className="text-secondary dark:text-zinc-400 font-label-bold shrink-0">{(item.numericPrice * item.quantity).toFixed(0)} ETB</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
                     <div className="bg-surface-container-lowest dark:bg-zinc-950/50 p-4 border-t border-surface-variant dark:border-zinc-800 space-y-2 transition-colors duration-300">
                       <div className="flex justify-between text-secondary dark:text-zinc-400 text-sm font-label-bold">
                         <span>Subtotal</span>
@@ -374,33 +402,46 @@ export default function MenuView() {
                   <p className="font-label-bold text-lg">Your cart is empty.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {cart.map((item) => (
-                    <div key={item._id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-surface-variant dark:border-zinc-800 shadow-sm transition-colors duration-300">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-surface-variant dark:bg-zinc-800 shrink-0 border border-outline/20 dark:border-zinc-700 transition-colors duration-300">
-                        <img src={item.imgSrc} alt={item.imgAlt} className="w-full h-full object-cover" />
+                <div className="space-y-4">
+                  {cartGroups.map(group => {
+                    const h = getHouse(group.houseId);
+                    return (
+                      <div key={group.houseId}>
+                        <div className="flex items-center gap-2 mb-2">
+                          {h && <img src={h.logo} alt={h.name} className="w-5 h-5 rounded object-cover" />}
+                          <span className="text-xs font-label-bold text-secondary uppercase tracking-wide">{h?.name || 'Unknown'}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {group.items.map((item) => (
+                            <div key={item._id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-surface-variant dark:border-zinc-800 shadow-sm transition-colors duration-300">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-surface-variant dark:bg-zinc-800 shrink-0 border border-outline/20 dark:border-zinc-700 transition-colors duration-300">
+                                <img src={item.imgSrc} alt={item.imgAlt} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-headline-md text-sm sm:text-base uppercase leading-tight truncate text-on-background dark:text-zinc-100">{item.title}</h4>
+                                <div className="text-brand-red font-label-bold text-xs sm:text-sm mt-1">{item.price}</div>
+                              </div>
+                              <div className="flex items-center gap-1 sm:gap-2 bg-surface-container-low dark:bg-zinc-800 rounded-full p-1 shrink-0 border border-surface-variant dark:border-zinc-700 transition-colors duration-300">
+                                <button
+                                  onClick={() => updateQuantity(item._id, -1)}
+                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center text-on-surface dark:text-zinc-200 hover:text-brand-red transition-colors shrink-0"
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">{item.quantity === 1 ? 'delete' : 'remove'}</span>
+                                </button>
+                                <span className="font-label-bold w-5 sm:w-6 text-center text-sm text-on-background dark:text-zinc-100">{item.quantity}</span>
+                                <button
+                                  onClick={() => updateQuantity(item._id, 1)}
+                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center text-on-surface dark:text-zinc-200 hover:text-brand-red transition-colors shrink-0"
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">add</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-headline-md text-sm sm:text-base uppercase leading-tight truncate text-on-background dark:text-zinc-100">{item.title}</h4>
-                        <div className="text-brand-red font-label-bold text-xs sm:text-sm mt-1">{item.price}</div>
-                      </div>
-                      <div className="flex items-center gap-1 sm:gap-2 bg-surface-container-low dark:bg-zinc-800 rounded-full p-1 shrink-0 border border-surface-variant dark:border-zinc-700 transition-colors duration-300">
-                        <button
-                          onClick={() => updateQuantity(item._id, -1)}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center text-on-surface dark:text-zinc-200 hover:text-brand-red transition-colors shrink-0"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">{item.quantity === 1 ? 'delete' : 'remove'}</span>
-                        </button>
-                        <span className="font-label-bold w-5 sm:w-6 text-center text-sm text-on-background dark:text-zinc-100">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item._id, 1)}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-zinc-700 shadow-sm flex items-center justify-center text-on-surface dark:text-zinc-200 hover:text-brand-red transition-colors shrink-0"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">add</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
