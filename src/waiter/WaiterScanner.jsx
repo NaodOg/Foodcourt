@@ -105,7 +105,8 @@ export default function WaiterScanner() {
 
               // Save order with houseId if available
               if (matchedHouse) {
-                saveOrder({ houseId: matchedHouse._id, orderData: parsed });
+                const { houseSlug, ...cleanOrderData } = parsed;
+                saveOrder({ houseId: matchedHouse._id, orderData: cleanOrderData });
               }
             } else {
               navigator.vibrate?.(100);

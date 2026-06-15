@@ -229,7 +229,7 @@ export default function MenuView() {
   const handlePlaceOrder = () => {
     if (cart.length === 0) return;
     const orderLines = cart.map(c => `${c.quantity}x ${c.title}`).join('\n');
-    const qrData = `ORDER:\n${orderLines}\n\nSubtotal: ${subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
+    const qrData = `HOUSE: ${houseSlug}\nORDER:\n${orderLines}\n\nSubtotal: ${subtotal.toFixed(0)} ETB\nTax (${taxRate}%): ${tax.toFixed(0)} ETB\nTotal: ${total.toFixed(0)} ETB`;
     placeOrder(qrData);
   };
 
