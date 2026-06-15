@@ -116,18 +116,19 @@ function HouseCard({ house, onClick, index }) {
         className="group relative cursor-pointer active:scale-[0.98] transition-transform duration-200"
       >
         <div
-          className="relative overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 shadow-xl shadow-black/[0.04] dark:shadow-black/20 hover:shadow-2xl hover:shadow-black/10 transition-all duration-500"
+          className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 transition-all duration-700"
           style={{
             boxShadow: hovered
-              ? `0 20px 60px -12px ${house.accentColor}25, 0 0 0 1px ${house.accentColor}20`
-              : undefined,
+              ? `0 30px 80px -20px ${house.accentColor}40, 0 0 0 1px ${house.accentColor}25`
+              : `0 4px 20px rgba(0,0,0,0.03), 0 0 0 1px rgba(0,0,0,0.04)`,
+            transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
           }}
         >
           {/* Image */}
-          <div className="relative h-52 sm:h-56 md:h-64 overflow-hidden">
+          <div className="relative h-56 sm:h-60 md:h-72 overflow-hidden">
             <div
-              className="w-full h-full transition-transform duration-700 ease-out"
-              style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
+              className="w-full h-full transition-transform duration-1000 ease-out"
+              style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)' }}
             >
               <img
                 src={house.logo}
@@ -135,45 +136,78 @@ function HouseCard({ house, onClick, index }) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-transparent" />
 
-            {/* House accent bar */}
+            {/* Decorative top accent line */}
             <div
-              className="absolute top-0 left-0 right-0 h-[3px] transition-opacity duration-500"
-              style={{ backgroundColor: house.accentColor, opacity: hovered ? 1 : 0.7 }}
+              className="absolute top-0 left-0 right-0 h-[4px] transition-all duration-700"
+              style={{
+                backgroundColor: house.accentColor,
+                opacity: hovered ? 1 : 0.8,
+                boxShadow: hovered ? `0 0 20px ${house.accentColor}60` : 'none',
+              }}
             />
 
-            {/* House name overlaid */}
-            <div className="absolute bottom-5 left-5 right-5">
+            {/* Corner decorative dots */}
+            <div className="absolute top-4 right-4 flex gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+            </div>
+
+            {/* House number badge */}
+            <div className="absolute top-5 left-5">
               <div
-                className="inline-block text-[10px] font-['Outfit'] font-medium uppercase tracking-[0.2em] text-white/70 mb-2 px-3 py-1 rounded-full border border-white/20 backdrop-blur-sm bg-white/10"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-['Outfit'] font-bold tracking-wider backdrop-blur-md"
+                style={{
+                  backgroundColor: `${house.accentColor}20`,
+                  color: house.accentColor,
+                  border: `1px solid ${house.accentColor}30`,
+                }}
               >
-                {index === 0 ? 'Pizza & Grill' : index === 1 ? 'Mediterranean' : 'Ethiopian'}
+                {String(index + 1).padStart(2, '0')}
               </div>
-              <h2 className="font-['DM_Serif_Display'] text-2xl sm:text-3xl text-white leading-tight drop-shadow-lg">
+            </div>
+
+            {/* House name overlaid */}
+            <div className="absolute bottom-6 left-6 right-6">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span
+                  className="w-6 h-px rounded-full"
+                  style={{ backgroundColor: house.accentColor }}
+                />
+                <span className="text-[10px] font-['Outfit'] font-medium uppercase tracking-[0.25em] text-white/60">
+                  {index === 0 ? 'Pizza & Grill' : index === 1 ? 'Mediterranean' : 'Ethiopian'}
+                </span>
+              </div>
+              <h2 className="font-['DM_Serif_Display'] text-2xl sm:text-3xl md:text-4xl text-white leading-tight drop-shadow-xl">
                 {house.name}
               </h2>
             </div>
           </div>
 
           {/* Description */}
-          <div className="p-5 sm:p-6">
-            <p className="text-[#5f3f3a] dark:text-zinc-400 text-sm sm:text-base leading-relaxed font-['Outfit'] font-light">
-              {house.description}
-            </p>
+          <div className="p-6 sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-[#5f3f3a] dark:text-zinc-400 text-sm sm:text-base leading-relaxed font-['Outfit'] font-light flex-1">
+                {house.description}
+              </p>
+            </div>
 
             {/* CTA */}
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-4">
               <div
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-['Outfit'] font-medium text-sm text-white transition-all duration-300 shadow-lg"
+                className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl font-['Outfit'] font-medium text-sm text-white transition-all duration-300"
                 style={{
                   backgroundColor: house.accentColor,
-                  boxShadow: hovered ? `0 8px 24px -4px ${house.accentColor}50` : `0 4px 12px -2px ${house.accentColor}30`,
-                  transform: hovered ? 'scale(1.02)' : 'scale(1)',
+                  boxShadow: hovered
+                    ? `0 12px 32px -8px ${house.accentColor}50`
+                    : `0 4px 12px -2px ${house.accentColor}30`,
+                  transform: hovered ? 'scale(1.03) translateX(2px)' : 'scale(1)',
                 }}
               >
-                Explore Menu
-                <svg className="w-4 h-4 transition-transform duration-300" style={{ transform: hovered ? 'translateX(3px)' : 'translateX(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span>Explore Menu</span>
+                <svg className="w-4 h-4 transition-transform duration-300" style={{ transform: hovered ? 'translateX(4px)' : 'translateX(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 5l7 7-7 7" />
                 </svg>
               </div>
