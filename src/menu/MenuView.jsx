@@ -5,8 +5,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../cart/CartContext.jsx';
 
-const DU_PATTERN = `url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg opacity='0.06'%3E%3Ccircle cx='55' cy='40' r='22' fill='%23b7102a' /%3E%3Ccircle cx='55' cy='40' r='10' fill='%23faf3ea' /%3E%3Ccircle cx='55' cy='40' r='4' fill='%23b7102a' /%3E%3Ccircle cx='47' cy='34' r='2.5' fill='%23b7102a' /%3E%3Ccircle cx='63' cy='38' r='2.5' fill='%23b7102a' /%3E%3Ccircle cx='55' cy='48' r='2.5' fill='%23b7102a' /%3E%3Cpath d='M38 50 Q45 44 52 50' fill='none' stroke='%23b7102a' stroke-width='2' stroke-linecap='round' /%3E%3C/g%3E%3Cg opacity='0.05'%3E%3Crect x='100' y='100' width='38' height='32' rx='6' fill='%23b7102a' /%3E%3Crect x='104' y='104' width='30' height='24' rx='4' fill='%23faf3ea' /%3E%3Ccircle cx='119' cy='112' r='4' fill='%23b7102a' /%3E%3Ccircle cx='114' cy='108' r='2' fill='%23b7102a' /%3E%3Ccircle cx='124' cy='108' r='2' fill='%23b7102a' /%3E%3Crect x='115' y='132' width='8' height='14' rx='2' fill='%23b7102a' /%3E%3C/g%3E%3Cg opacity='0.04'%3E%3Ccircle cx='30' cy='110' r='14' fill='%23b7102a' /%3E%3Ccircle cx='30' cy='110' r='6' fill='%23faf3ea' /%3E%3Ccircle cx='30' cy='110' r='2.5' fill='%23b7102a' /%3E%3C/g%3E%3Cg opacity='0.05'%3E%3Crect x='120' y='30' width='26' height='22' rx='5' fill='%23b7102a' /%3E%3Crect x='123' y='33' width='20' height='16' rx='3' fill='%23faf3ea' /%3E%3Ccircle cx='133' cy='39' r='3' fill='%23b7102a' /%3E%3Crect x='128' y='52' width='10' height='10' rx='2' fill='%23b7102a' /%3E%3C/g%3E%3C/svg%3E")`;
-
 function Header({ house, isDarkMode, toggleDarkMode }) {
   return (
     <header className="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-creamy dark:bg-zinc-950 border-b-2 border-surface-variant dark:border-zinc-800">
@@ -281,7 +279,7 @@ export default function MenuView() {
   }
 
   return (
-    <div className={`bg-creamy dark:bg-zinc-950 text-on-background dark:text-zinc-100 font-body-md min-h-[100dvh] transition-colors duration-300 ${totalItems > 0 ? 'pb-28' : 'pb-8'}`} style={houseSlug === 'du-pizza-burger' ? { backgroundImage: DU_PATTERN, backgroundSize: '160px 160px' } : undefined}>
+    <div className={`bg-creamy dark:bg-zinc-950 text-on-background dark:text-zinc-100 font-body-md min-h-[100dvh] transition-colors duration-300 ${totalItems > 0 ? 'pb-28' : 'pb-8'}`}>
       <Header house={house} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       <main className="max-w-4xl mx-auto px-margin relative">
         <CategoryNav
